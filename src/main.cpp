@@ -1,4 +1,5 @@
 #include "config.h"
+#include <PZEM004Tv30.h>
 
 // Create WiFi library instance
 WiFiMulti wifiMulti;
@@ -8,6 +9,8 @@ InfluxDBClient client(INFLUXDB_URL, INFLUXDB_ORG, INFLUXDB_BUCKET, INFLUXDB_TOKE
 
 // Declare Data point
 Point sensor("consumption");
+
+PZEM004Tv30 pzem(Serial2, 16, 17);
 
 void setup() {
   Serial.begin(115200);
@@ -44,15 +47,21 @@ void loop() {
     // Clear fields for reusing the point. Tags will remain the same as set above.
     sensor.clearFields();
   
-    float v = random(190, 235);
-    float i = random(0, 15);
-    float p = v*i;
-    Serial.printf("Power: %f\nVoltage: %f\nCurrent: %f\n", p, v, i);
+    // Read the data from the sensor
+    float voltage = pzem.voltage();
+    float current = pzem.current();
+    float power = pzem.power();
+    float energy = pzem.energy();
+    float frequency = pzem.frequency();
+    float pf = pzem.pf();
     
     // Store measured values into point
-    sensor.addField("Voltage", v);
-    sensor.addField("Current", i);
-    sensor.addField("Power", p);
+    sensor.addField("Voltage", voltage);
+    sensor.addField("Current", current);
+    sensor.addField("Power", power);
+    sensor.addField("Energy", energy);
+    sensor.addField("Frequency", frequency);
+    sensor.addField("Power Factor", pf);
   
     // Check WiFi connection and reconnect if needed
     if (wifiMulti.run() != WL_CONNECTED) {
@@ -65,6 +74,6 @@ void loop() {
       Serial.println(client.getLastErrorMessage());
     }
   
-    Serial.println("Waiting 1 second");
-    delay(1000);
+    Serial.println("Waiting 10 seconds");
+    delay(10000);
     }
