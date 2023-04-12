@@ -13,19 +13,20 @@ const char* mqtt_server = "192.168.109.128";
 
 // Public variables
 PZEM004Tv30 pzem(Serial2, 16, 17);
+int LED_BUIILTIN = 2;
 WiFiClient espClient;
 PubSubClient client(espClient);
 long lastMsg = 0;
 
 void setup() {
   Serial.begin(115200);
+  pinMode(LED_BUIILTIN, OUTPUT);
   setup_wifi();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
 }
 
 void setup_wifi() {
-  delay(10);
   // We start by connecting to a WiFi network
   Serial.println();
   Serial.print("Connecting to ");
@@ -56,17 +57,20 @@ void callback(char* topic, byte* message, unsigned int length) {
   }
   Serial.println();
 
-  // Feel free to add more if statements to control more GPIOs with MQTT
-
-  // If a message is received on the topic esp32/output, you check if the message is either "on" or "off". 
   // Changes the output state according to the message
-  if (String(topic) == "esp32/output") {
-    Serial.print("Changing output to ");
+  if (String(topic) == "esp32/energymonitor") {
     if(messageTemp == "on"){
-      Serial.println("on");
+      digitalWrite(LED_BUIILTIN, HIGH);
     }
     else if(messageTemp == "off"){
-      Serial.println("off");
+      digitalWrite(LED_BUIILTIN, LOW);
+    }
+    else if(messageTemp == "reset"){
+      if (pzem.resetEnergy())
+        Serial.println("OK");
+    }
+    else if(messageTemp = "restartESP"){
+      ESP.restart();
     }
   }
 }
@@ -79,7 +83,7 @@ void reconnect() {
     if (client.connect("esp32_client", mqtt_user, mqtt_password)) {
       Serial.println("connected");
       // Subscribe
-      client.subscribe("esp32/output");
+      client.subscribe("esp32/energymonitor");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -108,12 +112,12 @@ void loop() {
     float pf = pzem.pf();
     
     StaticJsonDocument<200> payload;
-    payload["voltage"] = voltage;
-    payload["current"] = current;
-    payload["power"] = power;
-    payload["energy"] = energy;
-    payload["frequency"] = frequency;
-    payload["pfactor"] = pf;
+    payload["voltage"] = String(voltage, 1);
+    payload["current"] = String(current, 3);
+    payload["power"] = String(power, 3);
+    payload["energy"] = String(energy, 2);
+    payload["frequency"] = String(frequency, 1);
+    payload["pfactor"] = String(pf, 2);
 
     String str_payload;
     serializeJson(payload, str_payload);
