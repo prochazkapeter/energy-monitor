@@ -3,3 +3,8 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+.vscode/extensions.json
+test/config.h
+test/influxcloud.cpp
+.vscode/extensions.json
+.vscode/extensions.json
