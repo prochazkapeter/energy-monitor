@@ -32,8 +32,7 @@ String measure_data(void)
 void save_date(String message, const char *location)
 {
     if (message.length() == 17) {
-        String date = message.substring(
-            9, 17); // takes time in format <location-dd/mm/yy>
+        String date = message.substring(9, 17); // takes time in format <location-dd/mm/yy>
         struct tm date_from;
         date_from.tm_hour = 0;
         date_from.tm_min = 0;
@@ -43,8 +42,7 @@ void save_date(String message, const char *location)
         date_from.tm_mon = -1 + atoi((date.substring(3, 5)).c_str());
         date_from.tm_year = 100 + atoi((date.substring(6, 8)).c_str());
         uint32_t seconds = mktime(&date_from);
-        flashSaver.begin("energymonitor",
-                         false); // init namespace for saving data
+        flashSaver.begin("energymonitor", false); // init namespace for saving data
         Serial.print("Storing time to flash -> ");
         Serial.println(seconds);
         flashSaver.putUInt(location, seconds);
@@ -57,7 +55,7 @@ void save_date(String message, const char *location)
 // Checks flash memory for date record
 void print_date(const char *location)
 {
-    flashSaver.begin("energymonitor", false); // init namespace for saving data
+    flashSaver.begin("energymonitor", false);
     time_t flash_datefrom = flashSaver.getUInt(location, 0);
     if (flash_datefrom != 0) {
         struct tm stored_date;
@@ -121,8 +119,7 @@ void reset_energy(void)
         Serial.println(&timeinfo, "%d/%m/%y");
         if (pzem.resetEnergy()) {
             uint32_t now = mktime(&timeinfo);
-            flashSaver.begin("energymonitor",
-                             false); // init namespace for saving data
+            flashSaver.begin("energymonitor", false); // init namespace for saving data
             flashSaver.putUInt("datefrom", now);
             flashSaver.end();
             Serial.println("OK");

@@ -13,21 +13,23 @@ int cycles = 0;
 void setup()
 {
     Serial.begin(115200);
+    // Configure GPIO for LED and user BUTTON
     pinMode(LED_PIN, OUTPUT);
     pinMode(BUTTON, INPUT_PULLUP);
+    // If the user button is pressed immediately after boot,
+    // reset Wi-Fi configuration
     if (digitalRead(BUTTON) == LOW) {
         wm.resetSettings();
     }
-    digitalWrite(LED_PIN, HIGH);
-    setup_wifi();
-    client.setServer(mqtt_server, 1883);
-    client.setCallback(callback);
 
-    // Init and get the time
+    // Connect to Wi-Fi and configure MQTT connection
+    setup_wifi();
+
+    // Init and get time from NTP
     configTime(3600, 3600, ntp_server);
+    // Print billing period from flash memory
     print_date("datefrom");
     print_date("billdate");
-    digitalWrite(LED_PIN, LOW);
 }
 
 void loop()
@@ -49,15 +51,16 @@ void loop()
         lastMsg = now;
         cycles++;
 
-        // String str_payload = measure_data(); // TODO uncomment this line
+        String str_payload = measure_data();
 
         if (cycles > 6) { // every 1 minute
             cycles = 0;
             project_energy();
         }
 
-        String str_payload = "Test string from ESP32 to Home Assistant"; // TODO remove
-        Serial.println("Sending MQTT data");
+        // String str_payload = "Test string from ESP32 to Home Assistant";
+        Serial.print("Sending data -> ");
+        Serial.println(str_payload);
         client.publish(mqtt_publish_topic, str_payload.c_str());
     }
 }
